@@ -1,0 +1,129 @@
+# NOTE: this config file is for both training and testing
+# experiment and data parameters
+dataset_name: # NAME OF YOUR DATASET 
+data_with_subfolder: False
+train_data_path: # PATH TO FOLDER CONTAINING TRAINING IMAGES (normal/non-anomalous images only) 
+test_data_path: # PATH TO FOLDER CONTAINING TESTING IMAGES (normal and/or anomalous)
+expname: PICARD-train 
+
+# computation parameters
+cuda: True
+gpu_ids: [0]     # set the GPU ids to use, e.g. [0] or [1, 2]
+num_workers: 4
+
+# training parameters
+train:
+  n_critic: 5
+  n_epochs: 10000
+  subset_frac: # 0.01
+  resume: # directory with checkpoints to resume training at; latest iteration automatically detected (leave blank if training from scratch)
+  batch_size: 55
+  # image and masking parameters
+  image_shape: [256, 256, 1]
+  mask_shape: [128, 128]
+  mask_batch_same: True
+  max_delta_shape: [32, 32]
+  margin: [0, 0]
+  discounted_mask: True
+  spatial_discounting_gamma: 0.9
+  random_crop: True
+  mask_type: hole     # hole | mosaic
+  mosaic_unit_size: 12
+  # optimization
+  lr: 0.0001
+  beta1: 0.5
+  beta2: 0.9
+  # visualization
+  print_iter: 100
+  viz_iter: 10000
+  viz_max_out: 16
+  snapshot_save_iter: 5000
+
+# loss (loss weights)
+coarse_l1_alpha: 1.2
+l1_loss_alpha: 1.2
+ae_loss_alpha: 1.2
+global_wgan_loss_alpha: 1.
+gan_loss_alpha: 0.001
+wgan_gp_lambda: 10
+
+# testing/heatmapping parameters
+test:
+  # heatmap generation
+  droprate: 0.5
+  # anomaly scoring
+  heatmap_metrics: ['MCD_image', 'MCD_feature'] 
+    # metrics to use for anomaly scoring.
+    # ^ other options: 'MeanCD_image', 'MeanCD_feature', 'MedCD_image', 'MedCD_feature']
+  heatmap_M_inpaint: 10 # M in the paper: number of completions to generate for a given patch
+  parallel_batchsize: 32 # batch size for parallelized completions of different patches.
+    # ^ We use 32 for a single 24GB GPU, but you may need to reduce this if you have less memory.
+  # image and masking parameters
+  patch_shape: [256, 256, 1]
+  mask_shape: [128, 128] # inpainting region
+  patch_stride: 32 # heatmap window stride
+  # visualization and analysis settings
+  save_heatmap_data: True
+  save_heatmap_plots: True
+  save_progressive_heatmap: False
+  log_compute_times: False
+  # additional scoring settings
+  only_check_nonblack_pixels: False
+
+# network parameters
+netG:
+  input_dim: 1
+  ngf: 32
+
+  # dropout parameters
+  droprate: # dropout probability p in [0, 1] to be used during TRAINING
+  # leave blank if not using dropout
+  dropout_type: 2D
+  dropout_which: CUSTOM
+  # set to ALL if applying dropout to everything in the net
+  # otherwise COARSE, FINE or CUSTOM
+
+  # Not controlled in model/networks
+  custom_drop_layers_coarse: [
+       conv2_downsample,
+       conv3,
+       conv4_downsample,
+       conv5,
+       conv6,
+       conv7_atrous,
+       conv8_atrous,
+       conv9_atrous,
+       conv10_atrous,
+       ] 
+
+  custom_drop_layers_fine: [
+        self.conv2_downsample,
+        self.conv3,
+        self.conv4_downsample,
+        self.conv5,
+        self.conv6,
+        self.conv7_atrous,
+        self.conv8_atrous,
+        self.conv9_atrous,
+        self.conv10_atrous,
+        self.pmconv1,
+        self.pmconv2_downsample,
+        self.pmconv3,
+        self.pmconv4_downsample,
+        self.pmconv5,
+        self.pmconv6,
+        self.pmconv9,
+        self.pmconv10,
+        self.allconv11,
+        self.allconv12,
+        self.allconv13,
+        self.allconv14,
+        self.allconv15,
+        self.allconv16
+  ] # names of conv layers module for dropout to be applied to (fine net)
+
+
+
+netD:
+  input_dim: 1
+  ndf: 32
