@@ -6,7 +6,7 @@ import numpy as np
 import torch.utils.data as data
 from torch import narrow
 from os import listdir
-from utils.tools import default_loader, is_image_file, normalize
+from inpainterutils.tools import default_loader, is_image_file, normalize
 import os
 
 import torchvision.transforms as transforms

@@ -3,7 +3,7 @@
 #### By [Nicholas Konz](https://nickk124.github.io/), Haoyu Dong and [Maciej Mazurowski](https://sites.duke.edu/mazurowski/).
 
 
-This is the official repository for our image anomaly detection model **PICARD** (**P**luralistic **I**mage **C**ompletion for **A**nomalous **R**epresentation **D**etection) from our paper *Unsupervised anomaly localization in high-resolution breast scans using deep pluralistic image completion* (in Medical Image Analysis 2023). PICARD uses deep learning and pluralistic image completion to localize anomalies in images, while only being trained on images **without** anomalies. This works by comparing different non-anomalous completions of a masked image region to the actual (possibly anomalous) appearance of the region (see the full abstract and novel contributions list [below](#abstract-and-contributions)).
+This is the official repository for our image anomaly detection model **PICARD** (**P**luralistic **I**mage **C**ompletion for **A**nomalous **R**epresentation **D**etection) from our paper *Unsupervised anomaly localization in high-resolution breast scans using deep pluralistic image completion* (in Medical Image Analysis 2023). PICARD uses deep learning and pluralistic image completion to localize anomalies in images, while only being trained on images **without** anomalies. This works by comparing different non-anomalous completions of a masked image region to the actual (possibly anomalous) appearance of the region (see the full [abstract and novel contributions list below](#abstract-and-contributions)).
 
 PICARD achieved state-of-the-art performance on a challenging tumor detection task in high-resolution digital breast tomosynthesis (one example shown below). Moreover, our method is significantly faster than other approaches, due to our novel application of channel-wise dropout to the image completion network during inference, allowing for the rapid sampling of different completions for an image region.
 
@@ -33,7 +33,7 @@ pip3 install -r requirements.txt
 
 First, you'll need to train the pluralistic image completion network/inpainter on your training data of normal/non-anomalous images, via the following steps.
 
-1. Edit `configs/default.yaml` to set your `dataset_name`, and set `train_data_path` to be the folder that contains your training set of normal (non-anomalous) images.
+1. Edit `configs/default.yaml` to set your `dataset_name`, and set `train_data_path` to be the folder that contains your training set of normal (non-anomalous) images, **relative to the `inpainter` directory**.
 
 This config file contains many other settings you may adjust, including GPU IDs.
 
@@ -48,7 +48,7 @@ cd inpainter
 python3 train.py --config ../configs/default.yaml
 ```
 
-The checkpoints for the inpainter/generator and the discriminator/critic will update in `inpainter/checkpoints/` as training progresses, in the form of `**/gen_{iteration}.pt` and `**/dis_{iteration}.pt`, respectively. You can also monitor the training progress with Tensorboard by running `tensorboard --logdir logs/`.
+The checkpoints for the inpainter/generator and the discriminator/critic will update in `inpainter/checkpoints/` as training progresses, in the form of `**/gen_{iteration}.pt` and `**/dis_{iteration}.pt`, respectively. You can control the frequency at which checkpoints save with `train:snapshot_save_iter` in the config file, and can also monitor the training progress with Tensorboard by running `tensorboard --logdir logs/`.
 
 
 ### Step 2: Model Testing / Anomaly Heatmap Generation
@@ -57,20 +57,20 @@ Now that you've trained the inpainter, you can use it to generate anomaly heatma
 
 To set up the testing environment, edit `configs/default.yaml` by:
 
-1. setting `test_data_path` to be the folder that contains your test set of images, and
+1. setting `test_data_path` to be the folder that contains your test set of images, **relative to the base directory**, and
 2. setting `test:patch_shape` and `test:mask_shape` to the values you used for `train:image_shape` and `train:mask_shape`, respectively.
 
 There are many additional options for heatmap generation and visualization under `test` in the config file which you may also adjust, such as the heatmapping window stride, multi-completion and parallelized patch batch sizes, etc.
 
-Now, run the following to predict anomaly heatmaps for the test set:
+Now, run the following to predict anomaly heatmaps for the test set **from the base directory**:
 
 ```bash
-python3 predict_heatmap.py --config /configs/default.yaml --checkpoint_iter {CHECKPOINT ITERATION}  --checkpoint_dir {CHECKPOINT DIRECTORY} 
+python3 predict_heatmap.py --config configs/default.yaml --checkpoint_iter {CHECKPOINT ITERATION}  --checkpoint_dir {CHECKPOINT DIRECTORY} 
 ```
 
-where `{CHECKPOINT ITERATION}` is the iteration of the inpainter checkpoint that you want to use, and `{CHECKPOINT DIRECTORY}` is the directory containing the inpainter checkpoints `**/gen_{CHECKPOINT ITERATION}.pt` and `**/dis_{CHECKPOINT ITERATION}.pt`. We used the iteration where the average $L_1$ error between the inpaintings and the ground truths on the training set was the lowest.
+where `{CHECKPOINT ITERATION}` is the iteration of the inpainter checkpoint that you want to use, and `{CHECKPOINT DIRECTORY}` is the path to the directory containing the inpainter checkpoints `**/gen_{CHECKPOINT ITERATION}.pt` and `**/dis_{CHECKPOINT ITERATION}.pt`. We used the iteration where the average $L_1$ error between the inpaintings and the ground truths on the training set was the lowest.
 
-Completed heatmaps will be saved in `heatmaps`. We also provide heatmap scoring and statistical visualization tools in `eval.py`.
+If you don't have enough GPU memory, try reducing `test:parallel_batchsize` in the config, which is the number of image patches that completions are created for at once. Completed heatmaps will be saved in `heatmaps`, as both images and PyTorch tensors. We also provide heatmap scoring and statistical visualization tools in `eval.py`.
 
 ## Model Diagram
 

@@ -18,6 +18,7 @@ train:
   subset_frac: # 0.01
   resume: # directory with checkpoints to resume training at; latest iteration automatically detected (leave blank if training from scratch)
   batch_size: 55
+  snapshot_save_iter: 5000 # save a checkpoint of the model every N iterations
   # image and masking parameters
   image_shape: [256, 256, 1]
   mask_shape: [128, 128]
@@ -37,7 +38,6 @@ train:
   print_iter: 100
   viz_iter: 10000
   viz_max_out: 16
-  snapshot_save_iter: 5000
 
 # loss (loss weights)
 coarse_l1_alpha: 1.2

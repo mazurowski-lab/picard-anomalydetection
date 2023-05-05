@@ -4,7 +4,7 @@
 import os
 import shutil
 import torch
-from PICARD.utils import show_images, count_parameters
+from utils import show_images, count_parameters
 import torchvision.utils as vutils
 import torchvision.transforms as transforms
 import sys
@@ -12,98 +12,6 @@ from subprocess import call
 from PIL import Image
 
 # model loaders
-def load_inpainting_probability_mapper(checkpoints, hyperparams, device_ids):
-    # only works with HFPIC
-        # load multi-inpainter model (dropout or HFPIC), ready for inference
-    # returns a blackbox function that returns $M$ inpainting images: image, mask, M_inpaint -> inpaintings
-    # image is (1 x C x H x W) (floats)
-    # mask is (1 x 1 x H x W) (binary)
-    # (N > 1 not yet implemented)
-    use_cuda = False
-    if device_ids:
-        use_cuda = True
- 
-    main_dir = os.getcwd()
-    print(main_dir)
-
-    tmp_dir = '/workspace/HFPIC_tmp'
-    tmp_dir = os.path.join(main_dir, tmp_dir)
-    # path to store priors
-    prob_url = os.path.join(tmp_dir, 'probabilities')
-    if os.path.exists(prob_url):
-        shutil.rmtree(prob_url)
-    os.mkdir(prob_url) # create fresh, empty dir
-
-
-    def prob_mapper(image, mask):
-        assert len(image.shape) == 4, 'image shape = {} is does not have length 4.'.format(image.shape)
-        assert image.shape[0] == mask.shape[0]
-
-        test_batch_size = 1 # only one completion needed
-
-        # for now, just run commands instead of using direct python objects since codebase is so complex
-        # save imgs in tmp dir
-        imgs_url = os.path.join(tmp_dir, 'input_imgs')
-        if os.path.exists(imgs_url):
-            shutil.rmtree(imgs_url)
-        os.mkdir(imgs_url) # create fresh, empty dir
-
-        n_input = image.size(0)
-        for i in range(n_input):
-            save_path = os.path.join(imgs_url, '{}.png'.format(i))
-            vutils.save_image(image[i, :, :, :], save_path)
-
-        # save mask (duplicated for each image) in tmp dir
-        masks_url = os.path.join(tmp_dir, 'input_masks')
-        if os.path.exists(masks_url):
-            shutil.rmtree(masks_url)
-        os.mkdir(masks_url) # create fresh, empty dir
-
-        for i in range(n_input):
-            # save duplicate mask
-            save_path = os.path.join(masks_url, 'mask{}.png'.format(i))
-            vutils.save_image(mask[0, :, :, :], save_path)
-
-
-        # save images in temporary dir for retrieval (saving and loading operations take far less time than inference anyways)
-
-        # STAGE 1: command for using trained transformer to generate priors
-        visible_devices = ','.join(str(i) for i in device_ids)
-        os.chdir("src/HFPIC/ICT/Transformer")
-        stage_1_command = "CUDA_VISIBLE_DEVICES=" + visible_devices + " python3 inference.py --ckpt_path " + checkpoints['transformer'] + " \
-                                --BERT --image_url " + imgs_url + " \
-                                --mask_url " + masks_url + " \
-                                --n_layer 35 --n_embd 1024 --n_head 8 --top_k 40 --GELU_2 \
-                                --save_url " + prob_url + " \
-                                --image_size 32 --n_samples " + str(test_batch_size) + " --sample_probability_instead"
-
-        run_cmd_HFPIC(stage_1_command)
-        print("Finished generating probability maps")
-
-        # load probability maps
-
-        # load saved maps to tensors (if it ain't broke don't fix it???)
-        all_imgs_probs = []
-        for img_idx in range(n_input):
-            img_iptings = []
-            for inpainting_idx in range(M_inpaint):
-                ipting_path = os.path.join(out_url, '{}_{}.png'.format(img_idx, inpainting_idx))
-                ipting = Image.open(ipting_path).convert("RGB")
-                ipting = transforms.ToTensor()(ipting) # C x H x W
-                ipting = torch.unsqueeze(ipting, dim=0) # 1 x C x H x W
-                img_iptings.append(ipting)
-            img_iptings = torch.cat(img_iptings) # M x C x H x W
-            img_iptings = torch.unsqueeze(img_iptings, dim=0) # 1 x M x C x H x W
-            all_imgs_iptings.append(img_iptings)
-
-        all_imgs_iptings = torch.cat(all_imgs_iptings) # N x M x C x H x W 
-
-        os.chdir(main_dir)
-
-        return all_imgs_iptings.cuda() # size N_input x M_inpaint x ...
-    
-    return multi_inpainter 
-
 def load_multi_inpainter(model_type, checkpoints, hyperparams, device_ids, dropoutmodel_config=None, HFPIC_tmp_dir='/workspace/HFPIC_tmp'):
     # load multi-inpainter model (dropout or HFPIC), ready for inference
     # returns a blackbox function that returns $M$ inpainting images: image, mask, M_inpaint -> inpaintings
@@ -115,18 +23,16 @@ def load_multi_inpainter(model_type, checkpoints, hyperparams, device_ids, dropo
         use_cuda = True
         
     if model_type == 'dropout':
-        main_dir = os.getcwd()
         # import from dropout method (slightly different model if on DBT data)
         # directory and a few commands will be different for DBT data
         # if dataset_name == 'DBT':
         #     raise NotImplementedError 
         # else: # any other dataset (e.g. MVTec benchmark) 
-        os.chdir('src/inpainting_benchmarking/')
+        sys.path.append("inpainter")
         from model.networks import Generator
-        from utils.tools import get_config, get_model_list
-        from utils.dropout import customize_dropout, apply_dropout_on
+        from inpainterutils.tools import get_config, get_model_list
+        from inpainterutils.dropout import customize_dropout, apply_dropout_on
         # switch back to main dir
-        os.chdir(main_dir)
 
         # load config
         config = get_config(dropoutmodel_config)
@@ -236,7 +142,7 @@ def load_multi_inpainter(model_type, checkpoints, hyperparams, device_ids, dropo
             
             # STAGE 1: command for using trained transformer to generate priors
             visible_devices = ','.join(str(i) for i in device_ids)
-            os.chdir("src/HFPIC/ICT/Transformer")
+            sys.path.append("src/HFPIC/ICT/Transformer") 
             stage_1_command = "CUDA_VISIBLE_DEVICES=" + visible_devices + " python3 inference.py --ckpt_path " + checkpoints['transformer'] + " \
                                     --BERT --image_url " + imgs_url + " \
                                     --mask_url " + masks_url + " \
@@ -255,7 +161,7 @@ def load_multi_inpainter(model_type, checkpoints, hyperparams, device_ids, dropo
                 shutil.rmtree(out_url)
             os.mkdir(out_url) # create fresh, empty dir
             
-            os.chdir("../Guided_Upsample")
+            sys.path.append("../Guided_Upsample")
             stage_2_command = "CUDA_VISIBLE_DEVICES=" + visible_devices + " python3 test.py --input " + imgs_url + " \
                                         --mask " + masks_url + " \
                                         --prior " + prior_url + " \
@@ -282,8 +188,6 @@ def load_multi_inpainter(model_type, checkpoints, hyperparams, device_ids, dropo
                 all_imgs_iptings.append(img_iptings)
                 
             all_imgs_iptings = torch.cat(all_imgs_iptings) # N x M x C x H x W 
-    
-            os.chdir(main_dir)
             
             return all_imgs_iptings # size N_input x M_inpaint x ...
     
@@ -302,14 +206,12 @@ def load_inpainting_feature_extractor(model_type, checkpoints, hyperparams, devi
         if model_type == 'HFPIC':
             print('feature extractor not implemented for HFPIC (only use image MSE metric for now).\n using dropout inpainter critic instead')
         
-        main_dir = os.getcwd()
         # import from dropout method (slightly different model if on DBT data)
         # directory and a few commands will be different for DBT data
-        os.chdir('src/inpainting_benchmarking/')
+        sys.path.append("inpainter")
         from model.networks import LocalDis
-        from utils.tools import get_config, get_model_list
+        from inpainterutils.tools import get_config, get_model_list
         # switch back to main dir
-        os.chdir(main_dir)
 
         # load config
         config = get_config(dropoutmodel_config)
@@ -333,7 +235,9 @@ def load_inpainting_feature_extractor(model_type, checkpoints, hyperparams, devi
             if completion.shape[1] == 3:
                 completion = transforms.functional.rgb_to_grayscale(completion)
             
-            features, score = netD_local(completion) # second output is the critic score output
+            #features, score = netD_local(completion) # second output is the critic score output
+            score = netD_local(completion) # second output is the critic score output
+            features = netD_local.module.saved_featuremap
             if return_critic_score:
                 return features, score
             else:

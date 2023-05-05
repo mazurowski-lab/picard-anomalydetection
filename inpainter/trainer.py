@@ -7,10 +7,10 @@ import torch.nn as nn
 from torch import autograd
 from model.networks import Generator, LocalDis, GlobalDis
 
-from utils.tools import get_model_list, local_patch, spatial_discounting_mask
-from utils.logger import get_logger
+from inpainterutils.tools import get_model_list, local_patch, spatial_discounting_mask
+from inpainterutils.logger import get_logger
 
-from utils.dropout import customize_dropout
+from inpainterutils.dropout import customize_dropout
 
 logger = get_logger()
 

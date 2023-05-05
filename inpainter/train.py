@@ -17,8 +17,8 @@ from tensorboardX import SummaryWriter
 
 from trainer import Trainer
 from data.dataset import Dataset
-from utils.tools import get_config, random_bbox, mask_image, log_startup_info
-from utils.logger import get_logger
+from inpainterutils.tools import get_config, random_bbox, mask_image, log_startup_info
+from inpainterutils.logger import get_logger
 
 parser = ArgumentParser()
 parser.add_argument('--config', type=str, default='configs/config.yaml',
@@ -36,7 +36,6 @@ def main():
     # CUDA configuration
     cuda = config['cuda']
     device_ids = config['gpu_ids']
-    print(device_ids)
     if cuda:
         os.environ['CUDA_VISIBLE_DEVICES'] = ','.join(str(i) for i in device_ids)
         #device_ids = list(range(len(device_ids)))

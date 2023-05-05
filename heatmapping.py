@@ -9,7 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 from tqdm import tqdm
-from PICARD.utils import show_images
+from utils import show_images
 
 # heatmapping code: sliding surroundings/sliding window
 

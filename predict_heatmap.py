@@ -31,7 +31,7 @@ from time import time
 parser = ArgumentParser()
 parser.add_argument('--config', type=str, default='configs/config.yaml',
                     help="configuration")
-parser.add_argument('--seed', type=int, help='manual seed', default=1337,
+parser.add_argument('--seed', type=int, default=1337,
                     help="manual random seed")
 parser.add_argument('--checkpoint_dir', type=str,
                     help="path to saved inpainter model checkpoint directory")
@@ -63,14 +63,6 @@ def main():
     torch.manual_seed(seed)
     if cuda:
         torch.cuda.manual_seed_all(seed)
-
-
-    # logger
-    log_dir = 'test_logs'
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
-    logger = Logger('test', log_dir, heatmap_metrics)
-    dt_now = datetime.now()
 
     ############################################################
     ### (2) model setup
@@ -137,6 +129,12 @@ def main():
     # misc scoring settings
     only_check_nonblack_pixels = config["test"]["only_check_nonblack_pixels"]
 
+    # logger
+    log_dir = 'test_logs'
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+    logger = Logger('test', log_dir, heatmap_metrics)
+    dt_now = datetime.now()
 
     ############################################################
     ### (3) heatmap generation

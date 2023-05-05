@@ -9,7 +9,7 @@ from torch.nn.utils import spectral_norm as spectral_norm_fn
 from torch.nn.utils import weight_norm as weight_norm_fn
 from PIL import Image
 from torchvision import transforms
-from utils.tools import extract_image_patches, flow_to_image, \
+from inpainterutils.tools import extract_image_patches, flow_to_image, \
     reduce_mean, reduce_sum, default_loader, same_padding
 
 # CONSTANTS
