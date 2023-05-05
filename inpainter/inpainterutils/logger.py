@@ -1,3 +1,4 @@
+# adapted from https://github.com/daa233/generative-inpainting-pytorch/blob/master/utils/logger.py
 import os
 import sys
 import datetime

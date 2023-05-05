@@ -1,5 +1,6 @@
 ##############################
 # utils for training the pluralistic image completion network.
+# Modified from https://github.com/daa233/generative-inpainting-pytorch/blob/master/trainer.py
 ##############################
 import os
 import torch

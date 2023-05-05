@@ -1,5 +1,6 @@
 ##############################
 # neural net model code.
+# adapted from https://github.com/daa233/generative-inpainting-pytorch/blob/master/model/networks.py
 ##############################
 import numpy as np
 import torch

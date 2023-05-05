@@ -1,3 +1,5 @@
+# adapted from https://github.com/daa233/generative-inpainting-pytorch/blob/utils/tools.py
+
 import os
 import torch
 import yaml
