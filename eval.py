@@ -9,6 +9,38 @@ import matplotlib.pyplot as plt
 fontsize_lrg = 16
 fontsize_med = 12
 fontsize_sm = 10
+            
+# heatmap evaluation tools
+def score_heatmap(score_type, heatmap, bboxes, ignore_mask=None, threshold_frac=None):
+    segmentation = torch.zeros_like(heatmap)
+    for bbox in bboxes:
+        t, l, h, w = bbox
+
+        segmentation[t:t+h, l:l+w] = 1.
+        
+    segmentation_original = torch.clone(segmentation)
+        
+    if ignore_mask is not None:
+        segmentation = torch.masked_select(segmentation, ~ignore_mask)
+        torch.masked_select(heatmap, ~ignore_mask)
+    
+    if score_type == 'pixel_AUC': 
+        score = metrics.roc_auc_score(
+                segmentation.cpu().numpy().astype(int).reshape(-1), 
+                heatmap.cpu().numpy().reshape(-1)
+        )
+        
+    elif score_type == 'AP':
+        score = metrics.average_precision_score(
+                segmentation.cpu().numpy().astype(int).reshape(-1), 
+                heatmap.cpu().numpy().reshape(-1)
+        )
+    
+    else:
+        raise NotImplementedError
+    
+    return segmentation_original.cpu(), score
+
 
 # results visualization tools
 def plot_score_dists(heatmaps, segmentation, ignore_mask=None, save=False):
@@ -71,35 +103,3 @@ def plot_roc_curves(heatmaps, segmentation, ignore_mask=None, save=False):
         
         plt.show()
     return
-
-            
-# heatmap evaluation tools
-def score_heatmap(score_type, heatmap, bboxes, ignore_mask=None, threshold_frac=None):
-    segmentation = torch.zeros_like(heatmap)
-    for bbox in bboxes:
-        t, l, h, w = bbox
-
-        segmentation[t:t+h, l:l+w] = 1.
-        
-    segmentation_original = torch.clone(segmentation)
-        
-    if ignore_mask is not None:
-        segmentation = torch.masked_select(segmentation, ~ignore_mask)
-        torch.masked_select(heatmap, ~ignore_mask)
-    
-    if score_type == 'pixel_AUC': 
-        score = metrics.roc_auc_score(
-                segmentation.cpu().numpy().astype(int).reshape(-1), 
-                heatmap.cpu().numpy().reshape(-1)
-        )
-        
-    elif score_type == 'AP':
-        score = metrics.average_precision_score(
-                segmentation.cpu().numpy().astype(int).reshape(-1), 
-                heatmap.cpu().numpy().reshape(-1)
-        )
-    
-    else:
-        raise NotImplementedError
-    
-    return segmentation_original.cpu(), score
