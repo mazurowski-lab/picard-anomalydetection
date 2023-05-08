@@ -2,8 +2,12 @@
 
 #### By [Nicholas Konz](https://nickk124.github.io/), Haoyu Dong and [Maciej Mazurowski](https://sites.duke.edu/mazurowski/).
 
+[![arXiv Paper](https://img.shields.io/badge/arXiv-2305.03098-orange.svg?style=flat)](https://arxiv.org/abs/2305.03098)
 
-This is the official repository for our image anomaly detection model **PICARD** (**P**luralistic **I**mage **C**ompletion for **A**nomalous **R**epresentation **D**etection) from our paper *Unsupervised anomaly localization in high-resolution breast scans using deep pluralistic image completion* (in Medical Image Analysis 2023). PICARD uses deep learning and pluralistic image completion to localize anomalies in images, while only being trained on images **without** anomalies. This works by comparing different non-anomalous completions of a masked image region to the actual (possibly anomalous) appearance of the region (see the full [abstract and novel contributions list below](#abstract-and-contributions)).
+
+This is the official repository for our image anomaly detection model **PICARD** (**P**luralistic **I**mage **C**ompletion for **A**nomalous **R**epresentation **D**etection) from our paper [*Unsupervised anomaly localization in high-resolution breast scans using deep pluralistic image completion*](https://arxiv.org/abs/2305.03098) (in Medical Image Analysis 2023). PICARD uses deep learning and pluralistic image completion to localize anomalies in images, while only being trained on images **without** anomalies. This works by comparing different non-anomalous completions of a masked image region to the actual (possibly anomalous) appearance of the region (see the full [abstract and novel contributions list below](#abstract-and-contributions)).
+
+In this repository we provide easy-to-use code and step-by-step instructions to train and test PICARD on your own data.
 
 PICARD achieves **state-of-the-art performance** on a challenging tumor detection task in high-resolution digital breast tomosynthesis (one example shown below). Moreover, our method is **significantly faster than other approaches**, due to our novel application of channel-wise dropout to the image completion network during inference, allowing for the rapid sampling of different completions for an image region.
 
@@ -13,8 +17,15 @@ The basic diagram of our model is shown under the [Model Diagram](#model-diagram
 
 ## Citation
 
-Please cite our paper if you use our code or reference our work:
-
+Please cite our paper if you use our code or reference our work (published version citation forthcoming):
+```bib
+@article{konz2023picard,
+  title={Unsupervised anomaly localization in high-resolution breast scans using deep pluralistic image completion},
+  author={Konz, Nicholas and Dong, Haoyu and Mazurowski, Maciej A},
+  journal={arXiv preprint arXiv:2305.03098},
+  year={2023}
+}
+```
 
 ## Code Usage/Installation
 
