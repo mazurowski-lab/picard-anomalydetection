@@ -7,7 +7,7 @@
 
 This is the official repository for our image anomaly detection model **PICARD** (**P**luralistic **I**mage **C**ompletion for **A**nomalous **R**epresentation **D**etection) from our paper [*Unsupervised anomaly localization in high-resolution breast scans using deep pluralistic image completion*](https://arxiv.org/abs/2305.03098) (in Medical Image Analysis 2023). PICARD uses deep learning and pluralistic image completion to localize anomalies in images, while only being trained on images **without** anomalies. This works by comparing different non-anomalous completions of a masked image region to the actual (possibly anomalous) appearance of the region (see the full [abstract and novel contributions list below](#abstract-and-contributions)).
 
-In this repository we provide easy-to-use code and step-by-step instructions to train and test PICARD on your own data.
+**In this repository we provide easy-to-use code and step-by-step instructions to train and test PICARD on your own data.**
 
 PICARD achieves **state-of-the-art performance** on a challenging tumor detection task in high-resolution digital breast tomosynthesis (one example shown below). Moreover, our method is **significantly faster than other approaches**, due to our novel application of channel-wise dropout to the image completion network during inference, allowing for the rapid sampling of different completions for an image region.
 
